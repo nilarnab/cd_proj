@@ -77,8 +77,8 @@ class Analyzer:
                             parsing_table[var_to_index[variable]][term_to_index[symbol]] = [variable, rule]
 
                         else:
-                            #print("!!!!!!!!!The place here is already filled with",
-                                  # parsing_table[var_to_index[variable]][term_to_index[symbol]])
+                            print("!!!!!!!!!The place here is already filled with",
+                                  parsing_table[var_to_index[variable]][term_to_index[symbol]])
                             time.sleep(5)
                             exit(1)
 
@@ -96,8 +96,8 @@ class Analyzer:
                             if parsing_table[var_to_index[variable]][term_to_index[symbol_1]] is None:
                                 parsing_table[var_to_index[variable]][term_to_index[symbol_1]] = [variable, rule]
                             else:
-                                #print("!!!!!!!!!!The place is already filled with",
-                                      # parsing_table[var_to_index[variable]][term_to_index[symbol_1]])
+                                print("!!!!!!!!!!The place is already filled with",
+                                      parsing_table[var_to_index[variable]][term_to_index[symbol_1]], "CORRD", variable, "term_symb", symbol_1)
                                 time.sleep(5)
                                 exit(1)
 
@@ -122,12 +122,12 @@ class Analyzer:
 
         #print("DISPLAYING TABLE")
         for terminal in terminals:
-            #print(terminal, end=" | ")
+            print(terminal, end=" | ")
             pass
-        #print('')
+        print('')
 
         for row in table:
-            #print(row)
+            print(row)
             pass
 
     def find_reason_of_error(self, stack, input):
@@ -168,7 +168,7 @@ class Analyzer:
 
         while True:
 
-            #print("STACK:", stack, "INPUT", input)
+            print("STACK:", stack, "INPUT", input)
 
             # reduce
             while stack and input:
@@ -403,32 +403,49 @@ class FindFollow(FindFirst):
 
 if __name__ == '__main__':
     ALPHABETS = [chr(i + ord('a')) for i in range(26)]
-    STRING = "int anewvariable;int var = 10;tf(a>b){int var = 10;}"
+    # STRING = "int anewvariable;int var = 10;tf(a>b){int var = 10;}"
+    # STRING = "int var;}tf(a>b){int var = 10;}int var;{"
     # STRING = "int var = 10"
     # STRING = '()()((()))'
     # STRING = '(a)'
+    # STRING = "int ne;int newvariable;}"
+    STRING = "tf(a>b){int anewvar;int googlywooglyvar;"
 
-    STARTING = 'A'
+    OPEN_ANALYZE_START = 'I_OPEN'
 
-    """
-    A: Declaration and iitialization construct
-    B, C: [a-Z]*
-    T: Gives <SPACE>*<MATH><SPACE>*<DIGIT>*
-    M: Gives mathematical functions
-    S: <SPACE>*
+    OPEN_ANALYZE = {
 
-    """
+        'A': [['i', 'n', 't', ' ', 'B', 'T', ';', 'A'], ['c', 'h', 'a', 'r', ' ', 'B', ';', 'A'], ['^']],
+        'B': [['a', 'C'], ['b', 'C'], ['c', 'C'], ['d', 'C'], ['e', 'C'], ['f', 'C'], ['g', 'C'], ['h', 'C'],
+              ['i', 'C'], ['j', 'C'], ['k', 'C'], ['l', 'C'], ['m', 'C'], ['n', 'C'], ['o', 'C'], ['p', 'C'],
+              ['q', 'C'], ['r', 'C'], ['s', 'C'], ['t', 'C'], ['u', 'C'], ['v', 'C'], ['w', 'C'], ['x', 'C'],
+              ['y', 'C'], ['z', 'C']
+              ],
+        'C': [['a', 'C'], ['b', 'C'], ['c', 'C'], ['d', 'C'], ['e', 'C'], ['f', 'C'], ['g', 'C'], ['h', 'C'],
+              ['i', 'C'], ['j', 'C'], ['k', 'C'], ['l', 'C'], ['m', 'C'], ['n', 'C'], ['o', 'C'], ['p', 'C'],
+              ['q', 'C'], ['r', 'C'], ['s', 'C'], ['t', 'C'], ['u', 'C'], ['v', 'C'], ['w', 'C'], ['x', 'C'],
+              ['y', 'C'], ['z', 'C']
+            , ['^']],
+        'T': [['S', 'M', 'S', 'R'], ['^']],
+        'R': [['0', 'R'], ['1', 'R'], ['2', 'R'], ['3', 'R'], ['4', 'R'], ['5', 'R'], ['6', 'R'], ['7', 'R'],
+              ['8', 'R'], ['^']],
 
-    """
-    BROKEN CONVENTIONS
-    ___________________________
+        'M': [['+'], ['-'], ['*'], ['/'], ['=']],
 
-    1. if(..) => tf(..)
+        'S': [[' ', 'W']],
+        'W': [[' ', 'W'], ['^']],
+        'E': [['B', '>', 'B']],
+        'F': [['B', '<', 'B']],
 
-    """
+        'I_OPEN': [['A', '}']],
 
-    RULES = {
-        'A': [['i', 'n', 't', ' ', 'B', 'T', ';', 'A'], ['c', 'h', 'a', 'r', ' ', 'B', ';'], ['I'], ['^']],
+        'OPENING': [['}']]
+    }
+
+    REGULAR_ANALYZE_START = 'A'
+
+    REGULAR_ANALYZE = {
+        'A': [['i', 'n', 't', ' ', 'B', 'T', ';', 'A'], ['c', 'h', 'a', 'r', ' ', 'B', ';', 'A'], ['I', 'A'], ['F', 'A'], ['^']],
         'B': [['a', 'C'], ['b', 'C'], ['c', 'C'], ['d', 'C'], ['e', 'C'], ['f', 'C'], ['g', 'C'], ['h', 'C'],
               ['i', 'C'], ['j', 'C'], ['k', 'C'], ['l', 'C'], ['m', 'C'], ['n', 'C'], ['o', 'C'], ['p', 'C'],
               ['q', 'C'], ['r', 'C'], ['s', 'C'], ['t', 'C'], ['u', 'C'], ['v', 'C'], ['w', 'C'], ['x', 'C'],
@@ -451,11 +468,50 @@ if __name__ == '__main__':
         # 'F': [['B', '<', 'B', ']],
 
         # # if construct
-        'I': [['t', 'f', '(', 'E', ')', '{', 'A', '}']]
+        'I': [['t', 'f', '(', 'E', ')', '{', 'A', '}']],
         # 'S': []
+
+        'F': [['f', 'o', 'r', '(', 'B', '=', 'R', ',', 'B', '<', 'R', ',', 'B', '+', '+', ')', '{', 'A', '}']]
     }
+
+    CLOSE_ANALYZE_START = 'I_CLOSE'
+    
+    CLOSE_ANALYZE = {
+        'A': [['i', 'n', 't', ' ', 'B', 'T', ';', 'A'], ['c', 'h', 'a', 'r', ' ', 'B', ';', 'A'], ['^']],
+        'B': [['a', 'C'], ['b', 'C'], ['c', 'C'], ['d', 'C'], ['e', 'C'], ['f', 'C'], ['g', 'C'], ['h', 'C'],
+              ['i', 'C'], ['j', 'C'], ['k', 'C'], ['l', 'C'], ['m', 'C'], ['n', 'C'], ['o', 'C'], ['p', 'C'],
+              ['q', 'C'], ['r', 'C'], ['s', 'C'], ['t', 'C'], ['u', 'C'], ['v', 'C'], ['w', 'C'], ['x', 'C'],
+              ['y', 'C'], ['z', 'C']
+              ],
+        'C': [['a', 'C'], ['b', 'C'], ['c', 'C'], ['d', 'C'], ['e', 'C'], ['f', 'C'], ['g', 'C'], ['h', 'C'],
+              ['i', 'C'], ['j', 'C'], ['k', 'C'], ['l', 'C'], ['m', 'C'], ['n', 'C'], ['o', 'C'], ['p', 'C'],
+              ['q', 'C'], ['r', 'C'], ['s', 'C'], ['t', 'C'], ['u', 'C'], ['v', 'C'], ['w', 'C'], ['x', 'C'],
+              ['y', 'C'], ['z', 'C']
+            , ['^']],
+        'T': [['S', 'M', 'S', 'R'], ['^']],
+        'R': [['0', 'R'], ['1', 'R'], ['2', 'R'], ['3', 'R'], ['4', 'R'], ['5', 'R'], ['6', 'R'], ['7', 'R'],
+              ['8', 'R'], ['^']],
+
+        'M': [['+'], ['-'], ['*'], ['/'], ['=']],
+
+        'S': [[' ', 'W']],
+        'W': [[' ', 'W'], ['^']],
+        'E': [['B', '>', 'B']],
+        'F': [['B', '<', 'B']],
+
+        # if construct
+
+        'I_CLOSE': [['t', 'f', '(', 'E', ')', '{', 'A']],
+
+        'OPENING': [['}']]
+        
+    }
+
     grammar = 'A'
-    analyzer = Analyzer(ALPHABETS, RULES, STARTING, STRING)
+    print("Sending for analysis")
+    analyzer = Analyzer(ALPHABETS, CLOSE_ANALYZE, CLOSE_ANALYZE_START, STRING)
+    print("Analyzer ready")
 
     res = analyzer.analyze_string()
+    
     print(res)
