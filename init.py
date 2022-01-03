@@ -4,9 +4,9 @@ import time
 
 from testing import Analyzer
 
-
 SUCCESS = True
 CONCERNS = []
+
 
 class TopParser:
 
@@ -20,14 +20,11 @@ class TopParser:
 
         for e in string:
             if e in ['{', '}']:
-
                 res.append([line_no, e])
 
         return res
 
-
     def points_of_divisions(self, buffer, line_no):
-    
 
         """
 
@@ -66,29 +63,28 @@ class TopParser:
                 if buffer[i: i + 2] == 'tf':
                     # partition 1 not required
                     break
-                
+
             if buffer[i] == '}':
                 # partition is required
                 pointer_1 = i
                 break
 
-        
-        for i in range(len(buffer) - 1, pointer_1 - 1, -1):
+        if buffer:
+            for i in range(len(buffer) - 1, pointer_1 - 1, -1):
 
-            if buffer[i] == '}':
-                # partition 2 is not required
-                break
-            
-            if buffer[i: i + 2] == 'tf':
-                # partition 2 is required
-                pointer_2 = i
-                break
+                if buffer[i] == '}':
+                    # partition 2 is not required
+                    break
 
+                if buffer[i: i + 2] == 'tf':
+                    # partition 2 is required
+                    pointer_2 = i
+                    break
 
         # so the division is to be
 
         # [: pointer_1 + 1] [pointer_1 + 1: pointer_2] [pointer_2: ]
-        
+
         # print("poitner 1", pointer_1, "pointer 2", pointer_2)
 
         res = [
@@ -105,70 +101,66 @@ class TopParser:
             ],
 
             [
-                buffer[pointer_2: ],
+                buffer[pointer_2:],
                 'CLOSE_ANALYZE',
                 [line_no, 'c']
             ],
         ]
 
         return res
-                
-
 
     def work_divider(self, line_no):
         global grievances
 
-        print("Thread in line no", line_no, "WORK RECEIVED", self.source_code)
-
+        print("Thread in line no", line_no)
 
         partitions = self.points_of_divisions(self.source_code, line_no)
-
+        print("PREPARING CHUNKS")
         for chunk in partitions:
 
-            print("CHUNK", chunk)
+
+            # print("CHUNK", chunk)
             if chunk[1] == 'OPEN_ANALYZE':
                 analyzer = Analyzer_open
                 parser_name = chunk[1]
 
                 if chunk[0]:
                     grievances.append([chunk[2], '}'])
-            
+
             if chunk[1] == 'REGULAR_ANALYZE':
                 analyzer = Analyzer_regular
                 parser_name = chunk[1]
             if chunk[1] == 'CLOSE_ANALYZE':
                 analyzer = Analyzer_close
                 parser_name = chunk[1]
-                
+
                 if chunk[0]:
                     grievances.append([chunk[2], '{'])
-            
 
             self.parser(chunk[0], analyzer, parser_name)
 
-        
-
     def parser(self, work, Analyzer, parser_name):
         global grievances, SUCCESS
+        print("PARSER AT WORK")
 
         if not work:
             return
-        
-        print("work received for analyzer", work, "with parser", parser_name)
+
+        # print("work received for analyzer", work, "with parser", parser_name)
         resp = Analyzer.analyze_string(work)
 
         print("RESPONSE:", resp)
 
         if resp['id'] == 0:
             print("PARSER WORKED, SAYS", resp['type'])
+            pass
 
         else:
             print("Parser did not work for", "WORK:", work, "ANALYZER NAME", parser_name)
             SUCCESS = False
 
-
             # resp = Analyzer_alt.analyze_string(work)
-            # print("RESPONSE:", resp)
+            print("RESPONSE:", resp)
 
             # if resp['id'] != 0:
             #     SUCCESS = False
@@ -177,7 +169,6 @@ class TopParser:
             #     # exit(0)
             # else:
             #     print("PARSER TWO WORKED, SAYS", resp['type'])
-        
 
     def solve_greivances(self):
         global SUCCESS
@@ -194,7 +185,7 @@ class TopParser:
         close_list = ["]", "}", ")"]
 
         print("GRIEVANCES", grievances)
-        
+
         grievances.sort()
 
         grievances = [el[1] for el in grievances]
@@ -219,13 +210,113 @@ class TopParser:
 def time_counter():
     global permission
     permission = False
-    time_d = 2
+    time_d = 0
     while time_d:
-        print("COUNT DOWN TIMER", time_d)
+        # print("COUNT DOWN TIMER", time_d)
         time_d -= 1
         time.sleep(1)
 
     permission = True
+
+
+def run(BYTE_CHUNK):
+    source_code = open("input.txt", "r")
+
+    threads = []
+
+    line_no = 0
+
+    print("MAKING ANALYZERS")
+
+
+
+    while not permission:
+        time.sleep(1)
+        print("WAITING FOR PERMISSION", permission)
+
+    # starting analysis
+
+    buffer = []
+
+    LINE_CHUNK = 20
+
+
+    print("starting ..")
+    START_TIME = time.time()
+    chunk_buffer = source_code.readlines(BYTE_CHUNK)
+    # print(chunk_buffer)
+    line_no = 0
+
+    while chunk_buffer:
+        line_no += 1
+        # print("line nu", line_no)
+        # chunk_buffer_var = [el.strip() for el in chunk_buffer]
+        line = ''.join(chunk_buffer).replace('\n', '')
+        # line = line.strip()
+        # print("feeding", line)
+        top_parser = TopParser(source_code=line)
+        threads.append(threading.Thread(target=top_parser.work_divider, args=(line_no,)))
+
+        chunk_buffer = source_code.readlines(BYTE_CHUNK)
+        # print(chunk_buffer)
+
+    print("starting threads")
+    for thread in threads:
+        thread.start()
+
+    """
+    for line in source_code:
+        line = line.replace('\n', '').strip()  # removing obvious '\n'
+
+
+        line_no += 1
+        buffer.append(line)
+
+        if line_no % 10 == 0:
+            nw_buffer = ''.join(buffer)
+            buffer = []
+            # print("BUFFER NOW", nw_buffer)
+            top_parser = TopParser(source_code=nw_buffer)
+            # top_parser.work_divider()     # non threaded application
+            threads.append(threading.Thread(target=top_parser.work_divider, args=(line_no,)))
+            threads[-1].start()
+        # top_parser = TopParser(source_code=line)
+        # top_parser.work_divider(line_no)
+    if buffer:
+        nw_buffer = ''.join(buffer)
+        buffer = []
+        # print(":::::::::::: BUFFER NOW", nw_buffer)
+        top_parser = TopParser(source_code=nw_buffer)
+        # top_parser.work_divider()     # non threaded application
+        threads.append(threading.Thread(target=top_parser.work_divider, args=(line_no,)))
+        threads[-1].start()
+
+    """
+    # print(">>>>>>>>>>> COMING OUT OF FILE READING now buffer", buffer)
+
+    for thread_id in threads:
+        thread_id.join()
+    top_parser = TopParser("")
+    res = top_parser.solve_greivances()
+    # analysis complete
+    END_TIME = time.time()
+
+    print("======================================================================")
+    print("REPORT")
+    print("-----------------")
+    if res['id'] == 1:
+        print("Final Response", res)
+        print("Possible problems in line", CONCERNS)
+    else:
+        print("SUCCESS")
+        print("Final", res)
+    print("------------------")
+    print("TIME TAKEN")
+    print("------------------")
+
+    print(END_TIME - START_TIME, "secs")
+
+    return END_TIME - START_TIME
 
 
 if __name__ == '__main__':
@@ -279,12 +370,13 @@ if __name__ == '__main__':
         like tf(){
             here
         }
+        
+    4. No Indentation
 
 
     
     
     """
-
 
     """
     RUlES OF ANALYSIS
@@ -301,7 +393,7 @@ if __name__ == '__main__':
 
     OPEN_ANALYZE = {
 
-        'A': [['i', 'n', 't', ' ', 'B', 'T', ';', 'A'], ['c', 'h', 'a', 'r', ' ', 'B', ';', 'A'], ['^']],
+        'A': [['i', 'n', 't', ' ', 'B', 'T', ';', 'A'], ['^']],
         'B': [['a', 'C'], ['b', 'C'], ['c', 'C'], ['d', 'C'], ['e', 'C'], ['f', 'C'], ['g', 'C'], ['h', 'C'],
               ['i', 'C'], ['j', 'C'], ['k', 'C'], ['l', 'C'], ['m', 'C'], ['n', 'C'], ['o', 'C'], ['p', 'C'],
               ['q', 'C'], ['r', 'C'], ['s', 'C'], ['t', 'C'], ['u', 'C'], ['v', 'C'], ['w', 'C'], ['x', 'C'],
@@ -331,7 +423,8 @@ if __name__ == '__main__':
     REGULAR_ANALYZE_START = 'A'
 
     REGULAR_ANALYZE = {
-        'A': [['i', 'n', 't', ' ', 'B', 'T', ';', 'A'], ['c', 'h', 'a', 'r', ' ', 'B', ';', 'A'], ['I', 'A'], ['F', 'A'], ['^']],
+        'A': [['i', 'n', 't', ' ', 'B', 'T', ';', 'A'], ['I', 'A'],
+              ['F', 'A'], ['^']],
         'B': [['a', 'C'], ['b', 'C'], ['c', 'C'], ['d', 'C'], ['e', 'C'], ['f', 'C'], ['g', 'C'], ['h', 'C'],
               ['i', 'C'], ['j', 'C'], ['k', 'C'], ['l', 'C'], ['m', 'C'], ['n', 'C'], ['o', 'C'], ['p', 'C'],
               ['q', 'C'], ['r', 'C'], ['s', 'C'], ['t', 'C'], ['u', 'C'], ['v', 'C'], ['w', 'C'], ['x', 'C'],
@@ -361,7 +454,7 @@ if __name__ == '__main__':
     }
 
     CLOSE_ANALYZE_START = 'I_CLOSE'
-    
+
     CLOSE_ANALYZE = {
         'A': [['i', 'n', 't', ' ', 'B', 'T', ';', 'A'], ['c', 'h', 'a', 'r', ' ', 'B', ';', 'A'], ['^']],
         'B': [['a', 'C'], ['b', 'C'], ['c', 'C'], ['d', 'C'], ['e', 'C'], ['f', 'C'], ['g', 'C'], ['h', 'C'],
@@ -390,19 +483,11 @@ if __name__ == '__main__':
         'I_CLOSE': [['t', 'f', '(', 'E', ')', '{', 'A']],
 
         'OPENING': [['}']]
-        
+
     }
     """
     ----------------------------------------------------------------------------
     """
-
-    source_code = open("input.txt", "r")
-
-    threads = []
-
-    line_no = 0
-
-    print("MAKING ANALYZERS")
 
     try:
         Analyzer_open = analyzer_module.Analyzer(ALPHABETS, OPEN_ANALYZE, OPEN_ANALYZE_START)
@@ -411,64 +496,12 @@ if __name__ == '__main__':
     except:
         print("COULD NOT MAKE PARSING TABLE")
 
-    while not permission:
-        time.sleep(1)
-        print("WAITING FOR PERMISSION", permission)
+    min_time = float('inf')
+    chunk_size = 8000
 
-    # starting analysis
-    START_TIME = time.time()
-    buffer = []
-    for line in source_code:
-        line = line.replace('\n', '').strip()  # removing obvious '\n'
+    this_time = run(chunk_size)
+    print("CHUNK SIZE", chunk_size, "TIME", this_time)
+
+# 11.595202207565308
 
 
-
-        line_no += 1
-        buffer.append(line)
-
-        if line_no % 200 == 0:
-            nw_buffer = ''.join(buffer)
-            buffer = []
-            print("BUFFER NOW", nw_buffer)
-            top_parser = TopParser(source_code=nw_buffer)
-            # top_parser.work_divider()     # non threaded application
-            threads.append(threading.Thread(target=top_parser.work_divider, args=(line_no,)))
-            threads[-1].start()
-        # top_parser = TopParser(source_code=line)
-        # top_parser.work_divider(line_no)
-        
-            
-
-    print(">>>>>>>>>>> COMING OUT OF FILE READING now buffer", buffer)    
-    if buffer:
-        nw_buffer = ''.join(buffer)
-        buffer = []
-        print(":::::::::::: BUFFER NOW", nw_buffer)
-        top_parser = TopParser(source_code=nw_buffer)
-        # top_parser.work_divider()     # non threaded application
-        threads.append(threading.Thread(target=top_parser.work_divider, args=(line_no,)))
-        threads[-1].start()
-        
-
-    for thread_id in threads:
-        thread_id.join()
-    
-    res = top_parser.solve_greivances()
-    # analysis complete
-    END_TIME = time.time()
-
-    
-    print("======================================================================")
-    print("REPORT")
-    print("-----------------")
-    if res['id'] == 1:
-        print("Final Response", res)
-        print("Possible problems in line", CONCERNS )
-    else:
-        print("SUCCESS")
-        print("Final", res)
-    print("------------------")
-    print("TIME TAKEN")
-    print("------------------")
-
-    print(END_TIME - START_TIME, "secs")

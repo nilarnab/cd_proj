@@ -409,7 +409,7 @@ if __name__ == '__main__':
     # STRING = '()()((()))'
     # STRING = '(a)'
     # STRING = "int ne;int newvariable;}"
-    STRING = "tf(a>b){int anewvar;int googlywooglyvar;"
+    STRING = "tf(a>b){  int anewvar;int googlywooglyvar;    }"
 
     OPEN_ANALYZE_START = 'I_OPEN'
 
@@ -468,7 +468,7 @@ if __name__ == '__main__':
         # 'F': [['B', '<', 'B', ']],
 
         # # if construct
-        'I': [['t', 'f', '(', 'E', ')', '{', 'A', '}']],
+        'I': [['S', 't', 'f', '(', 'E', ')', '{', 'A', '}']],
         # 'S': []
 
         'F': [['f', 'o', 'r', '(', 'B', '=', 'R', ',', 'B', '<', 'R', ',', 'B', '+', '+', ')', '{', 'A', '}']]
@@ -501,7 +501,7 @@ if __name__ == '__main__':
 
         # if construct
 
-        'I_CLOSE': [['t', 'f', '(', 'E', ')', '{', 'A']],
+        'I_CLOSE': [['S', 't', 'f', '(', 'E', ')', '{', 'A']],
 
         'OPENING': [['}']]
         

@@ -16,6 +16,8 @@ class TopParser:
         # time to divide the work
         codes = self.source_code.split(';')
 
+        print("PREPARING CODES")
+
         for i in range(len(codes)):
             if i != len(codes) - 1:
                 self.parser(codes[i] + ';')
@@ -25,12 +27,15 @@ class TopParser:
     def parser(self, work):
         global grievances
 
+        print("PARSER AT WORK")
+
+
         if not work:
             return
 
         resp = Analyzer.analyze_string(work)
 
-        # print("RESPONSE:", resp)
+        print("RESPONSE:", resp)
 
         if resp['id'] == 0:
             print("PARSER WORKED, SAYS", resp['type'])
